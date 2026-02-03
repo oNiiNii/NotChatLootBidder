@@ -74,6 +74,18 @@ local function PrependSpaceIfContent(str)
   end
 end
 
+local function StripHicSuffix(msg)
+  if not msg or msg == "" then return msg end
+
+  msg = string.gsub(msg, "%.%.%.%s*hic%s*$", "")
+
+  -- Unicode
+  msg = string.gsub(msg, "…%s*hic%s*$", "")
+
+  return msg
+end
+
+
 local function Error(message)
 	DEFAULT_CHAT_FRAME:AddMessage("|cffbe5eff" .. chatPrefix .. "|cffff0000 "..message)
 end
@@ -183,7 +195,9 @@ local function CreateBidFrame(bidFrameId)
           note = " ALT; " .. note
         end
       end
-      ChatThrottleLib:SendChatMessage("ALERT", addonName, f.itemLink .. " " .. tier .. amt .. note, "WHISPER", nil, f.masterLooter)
+      local bidMessage = f.itemLink .. " " .. tier .. amt .. note
+      bidMessage = StripHicSuffix(bidMessage)
+      ChatThrottleLib:SendChatMessage("ALERT", addonName, bidMessage, "WHISPER", nil, f.masterLooter)
       frame:Hide()
     end)
   end
@@ -299,6 +313,8 @@ local function LoadBidFrame(item, masterLooter, minimumBid, MaxOsBid, MaxTwinkBi
 end
 
 local function GetItemLinks(str, start)
+  -- FIX: trimed "...hic" suffix from drunk player
+  str = StripHicSuffix(str)
   local itemLinks = {}
   local _start, _end = nil, -1
   while true do
@@ -346,6 +362,8 @@ local function TogglePlacementFrame()
 end
 
 local function SetMessage(message)
+  -- FIX: trimed "...hic" suffix from drunk player
+  message = StripHicSuffix(message)
   if message == "" then
     Message("Default message has been unset")
     NotChatLootBidder_Store.Messages[me] = nil
@@ -358,7 +376,10 @@ end
 local function InitSlashCommands()
 	SLASH_NotChatLootBidder1 = "/bid"
 	SlashCmdList[addonName] = function(message)
-		local commandlist = { }
+    -- FIX: trimed "...hic" suffix from drunk player
+    message = StripHicSuffix(message)
+		
+    local commandlist = { }
 		local command
 		for command in gfind(message, "[^ ]+") do
 			table.insert(commandlist, command)
